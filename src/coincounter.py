@@ -2,7 +2,7 @@ import cv2.cv2
 
 from lib import Coinimage
 from skimage import io
-import glob
+import os
 
 
 
@@ -16,22 +16,24 @@ def predict(image):
 '''
 def process(image):  # rückgabe Geldwert in cent zBsp.
     img = Coinimage(image)
-    img = img.invert(img)
-    img = img.discreteContrast(img)
-    img  = img.highContrastToBinary(img)
-    img = img.sequentialLabeling(img)
-    img = img.countAreaSize(img)
+    img = img.invert()
+    img = img.discreteContrast()
+    img  = img.highContrastToBinary()
+    img = img.sequentialLabeling()
+    img = img.countAreaSize()
     return predict(img)
 
 
-
+''' Tries to create a prediction off all Pictures found recursiveliy from root
+'''
 def existing_images():
-    extensions = ['png']
-    files = []
-    for file in glob.glob("*." + extensions[0]):
+    extensions = ['.png']
+    imagesList = []
+    for r,d,files in (os.walk("../")):
+        for file in files:
+            if file.endswith(extensions[0]):
+                imagesList.append(io.imread(os.path.join(r,file)))
 
-
-    imagesList = [cv2.cv2.imread(file)for file in files]
 
     for image in imagesList:
         print(f"Es wurden {process(image)} Cent gezählt")
