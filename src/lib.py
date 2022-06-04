@@ -13,19 +13,19 @@ class Coinimage:
         img = (img * -1) + np.amax(self.image)
         return img
     
-    def discreteContrast(filteredImage):
-        shape = np.shape(filteredImage)
-        img = filteredImage.copy()
+    def discreteContrast(self):
+        shape = np.shape(self.image)
+        img = self.image.copy()
         valueList = np.unique(img)
         valueDict = dict()
         for i in range(0, len(valueList)):
             valueDict.update({valueList[i] : i})
         for v in range(shape[0]):
             for u in range(shape[1]):
-                img[v][u] = valueDict.get(filteredImage[v][u])
+                img[v][u] = valueDict.get(self.image[v][u])
         return img
 
-    def labelForeGround(image):
+    def highContrastToBinary(image):
         img = rgb2gray(image)
         shape = np.shape(img)
         b_img = np.zeros((shape[0], shape[1]))
@@ -33,7 +33,7 @@ class Coinimage:
             for u in range(0, shape[1]):
                 if img[v][u] != 0:
                     b_img[v][u] = 1
-        return b_img
+        return Coinimage(b_img)
     
     def sequentialLabeling(self, image, n=8):
         # img = invertedBinaryImage(image)
@@ -43,7 +43,7 @@ class Coinimage:
         for v in range(0, np.shape(img)[0]):
             for u in range(0, np.shape(img)[1]):
                 if img[v][u] == 1:
-                    nbrs = labeledNeighbors(img, u, v, n)
+                    nbrs = self.__labeledNeighbors(img, u, v, n)
                     if len(nbrs) == 0:
                         img[v][u] = m
                         m = m + 1
@@ -83,7 +83,7 @@ class Coinimage:
                             img[v][u] = min(lsets)
         return self.invert(img)
     
-    def labeledNeighbors(image, x, y, n=8):
+    def __labeledNeighbors(image, x, y, n=8):
         nbrs = list()
         if x - 1 >= 0 and image[y][x-1] > 1:
             nbrs.append((x-1, y))
