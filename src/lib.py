@@ -5,13 +5,13 @@ import cv2
 from skimage.color import rgb2gray
 
 class Coinimage:
-    def __init__(self, image):
+    def __init__(self, image:np.array):
         self.image = image
     
     def invert(self):
         img = self.image.copy()
         img = (img * -1) + np.amax(self.image)
-        return img
+        return Coinimage(img)
     
     def discreteContrast(self):
         shape = np.shape(self.image)
@@ -23,10 +23,10 @@ class Coinimage:
         for v in range(shape[0]):
             for u in range(shape[1]):
                 img[v][u] = valueDict.get(self.image[v][u])
-        return img
+        return Coinimage(img)
 
-    def highContrastToBinary(image):
-        img = rgb2gray(image)
+    def highContrastToBinary(self):
+        img = rgb2gray(self.image)
         shape = np.shape(img)
         b_img = np.zeros((shape[0], shape[1]))
         for v in range(0, shape[0]):
@@ -35,9 +35,9 @@ class Coinimage:
                     b_img[v][u] = 1
         return Coinimage(b_img)
     
-    def sequentialLabeling(self, image, n=8):
+    def sequentialLabeling(self,  n=8):
         # img = invertedBinaryImage(image)
-        img = image.copy()
+        img = self.image.copy()
         m = 2
         c = list()
         for v in range(0, np.shape(img)[0]):
@@ -81,25 +81,25 @@ class Coinimage:
                     for lsets in r:
                         if lsets.issuperset({img[v][u]}):
                             img[v][u] = min(lsets)
-        return self.invert(img)
+        return self.invert(Coinimage(img))
     
-    def __labeledNeighbors(image, x, y, n=8):
+    def __labeledNeighbors(self, x, y, n=8):
         nbrs = list()
-        if x - 1 >= 0 and image[y][x-1] > 1:
+        if x - 1 >= 0 and self.image[y][x-1] > 1:
             nbrs.append((x-1, y))
         if n == 4:
-            if y - 1 >= 0 and image[y-1][x] > 1:
+            if y - 1 >= 0 and self.image[y-1][x] > 1:
                 nbrs.append((x, y-1))
             return nbrs
         r = -1
         v = 2
         if x - 1 < 0:
             r = 0
-        if x + 1 >= np.shape(image)[1]:
+        if x + 1 >= np.shape(self.image)[1]:
             v = 1
         if y - 1 >= 0:
             for i in range(r, v):
-                if image[y-1][x+i] > 1:
+                if self.image[y-1][x+i] > 1:
                     nbrs.append((x+i, y-1))
         return nbrs
     
