@@ -14,10 +14,10 @@ config: dict[Any, Any] = {
         "1cent": {
             "min": 400,
             "max": 500,
-            "color":,
+            "color":0,
         },
         "2cent": {
-            "min":,
+            "min":0,
         },
 
     }

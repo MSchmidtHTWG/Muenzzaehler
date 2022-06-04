@@ -8,6 +8,11 @@ if not cap.isOpened():
 # cap.set(17, 10000)
 counter = 0
 name ='test'
+print('Brightness:' + str(cap.get(10)))
+print('Contrast:' + str(cap.get(11)))
+print('Gain:' + str(cap.get(14)))
+print('Exposure:' + str(cap.get(15)))
+print('White balance:' + str(cap.get(17)))
 while(True):
     ret, frame = cap.read()
     # frame = cv2.blur(frame,(7,7),0)
