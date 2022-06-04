@@ -11,7 +11,7 @@ class Coinimage:
     def invert(self):
         img = self.image.copy()
         img = (img * -1) + np.amax(self.image)
-        return img
+        return Coinimage(img)
     
     def discreteContrast(self):
         shape = np.shape(self.image)
