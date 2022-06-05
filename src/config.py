@@ -1,6 +1,7 @@
 from typing import Dict, Any
 
 config: dict[Any, Any] = {
+
     "camera-settings": {
         "highcontrast": {
             "width": 640,
