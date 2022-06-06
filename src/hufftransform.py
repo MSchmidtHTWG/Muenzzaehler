@@ -1,8 +1,10 @@
+from math import ceil, floor
+
 import numpy as np
 import cv2 as cv
 
 
-class HufftransformCounter:
+class HuffTransformCounter:
 
     @staticmethod
     def run(**kwargs) -> (int, float):
@@ -32,23 +34,6 @@ class HufftransformCounter:
                     cv.circle(image, center, radius, (255, 0, 255), 3)
                 return image
 
-        def getColor(circles, image):
-            def swapAxis(circles) -> np.array:
-                swapedAxes = []
-                for element in circles:
-                    element = element[0]
-                    swapedAxes.append((element[1], element[0], element[2]))
-                return np.array(swapedAxes)
-
-            return None
-
-        def swapAxis(circles) -> np.array:
-            swapedAxes = []
-            for element in circles:
-                element = element[0]
-                swapedAxes.append((element[1], element[0], element[2]))
-            return np.array(swapedAxes)
-
         def getMinSquare(circle) -> (int, int, int, int):
             return circle[0] - circle[2], circle[0] + circle[2], circle[1] - circle[2], circle[1] + circle[2]
 
@@ -58,9 +43,8 @@ class HufftransformCounter:
             circleY = circle[1]
             radius = circle[2]
             xMin, xMax, yMin, yMax = getMinSquare(circle)
-            for x in range(xMin, xMax):
-                # inner=[]
-                for y in range(yMin, yMax):
+            for x in range(ceil(xMin), floor(xMax)):
+                for y in range(ceil(yMin), floor(yMax)):
                     dx = x - circleX
                     dy = y - circleY
                     squareDistance = dx ** 2 + dy ** 2
@@ -74,8 +58,12 @@ class HufftransformCounter:
             for element in coords:
                 color = hsvImage[element[0], element[1]]
                 colors.append(color[0])
-                print(color)
+                # print(color)
             return np.median(colors)
+
+        def predict(hsvColor: float, radius: int) -> (int,float):
+            '''add the prediction -> match color and radius to a coin'''
+            raise NotImplemented()
 
         if "image" in kwargs.keys():
             image = kwargs['image']
@@ -85,21 +73,22 @@ class HufftransformCounter:
             raise ValueError(
                 "You either need to pass the image as 'image=np.array' or the path to the image as 'path=/path/to/image'")
 
-        circles = getCircles(image)
-        colors = []
-        for circle in circles:
+        coins = getCircles(image)
+        coinData = []
+        for circle in coins[0]:
             coords = getCoinCoord(circle)
             color = getColor(image, coords=coords)
+            radius = circle[2]
+            coinData.append((color, radius))
 
-        image = image.copy()
-        gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-        bluredImage = cv.medianBlur(gray, 5)
-        rows = gray.shape[0]
-        # cv.imwrite('tmp.png',drawCircles(circles, image)) # anzeigen der erkannten Münzen
-
-
-        return circles
+        sum = 0
+        prob = 1
+        for color, radius in coinData:
+            tmp = predict(color, radius)
+            sum += tmp[0]
+            prob *= tmp[1]
+        return sum,prob
 
 
 if __name__ == '__main__':
-    HufftransformCounter.run(path='../testimages/0.png')
+    HuffTransformCounter.run(path='../testimages/0.png')
