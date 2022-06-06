@@ -1,4 +1,8 @@
 from typing import Dict, Any
+import sys
+import numpy as np
+from skimage import io
+import cv2
 
 config: dict[Any, Any] = {
 
@@ -22,15 +26,32 @@ config: dict[Any, Any] = {
             "white balance": 1,
         },
     },
-    "coins": {
-        "1cent": {
-            "min": 400,
-            "max": 500,
-            "color":0,
-        },
-        "2cent": {
-            "min":0,
-        },
-
-    }
+    "coins": regionSizeAndTone()
 }
+
+def regionSizeAndTone():
+    names = ['2Euro', '1Euro', '50Cent', '20Cent', '10Cent', '5Cent', '2Cent', '1Cent']
+    size = 6
+    sizeAndToneDict = dict()
+    for n in names:
+        mi  = sys.maxsize
+        mx = 0
+        color = []
+        for i in range(0, size):
+            labeledImage = sequentialLabeling(labelForeGround(io.imread(f'reference/highContrast/{n}{i}.png')))
+            valueList, counts = np.unique(labeledImage, return_counts=True)
+            count = np.max(removeClutter(counts[0:len(counts)-1]))
+            colorImage = io.imread(f'reference/lowContrast/{n}{i}.png')
+            hsvImg = cv2.cvtColor(colorImage, cv2.COLOR_BGR2HSV)
+            shape = np.shape(labeledImage)
+            for label in valueList:
+                for v in range(0, shape[0]):
+                    for u in range(0, shape[1]):
+                        if labeledImage[v][u] == label:
+                            color.append(hsvImg[v][u][0])
+            if count <= mi:
+                mi = count
+            if count >= mx:
+                mx = count
+        sizeAndToneDict.update({n : (mi, mx, np.mean(color))})
+    return sizeAndToneDict
