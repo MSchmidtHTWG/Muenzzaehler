@@ -2,19 +2,26 @@ import numpy as np
 import cv2
 import time
 
-exposure = -4
-gain = 0
-brightness = 0
-contrast = 0
-tone = 255
-whitebalance = 0
+exposure = -6
+gain = 50
+brightness = 50
+contrast = 33
+tone = 33
+whitebalance = 8000
 
-exposure2 = -6
-gain2 = 20
-brightness2 = 190
+exposure2 = -5
+gain2 = 70
+brightness2 = 105
 contrast2 = 255
 tone2 = 0
-whitebalance2 = 0
+whitebalance2 = 8000
+
+exposure3 = -4
+gain3 = 25
+brightness3 = 128
+contrast3 = 33
+tone3 = 33
+whitebalance3 = 8000
 
 cap = cv2.VideoCapture(0)
 if not cap.isOpened():
@@ -23,11 +30,29 @@ if not cap.isOpened():
 # cap.set(17, 10000)
 counter = 0
 name ='test'
-print('Brightness:' + str(cap.get(10)))
-print('Contrast:' + str(cap.get(11)))
-print('Gain:' + str(cap.get(14)))
-print('Exposure:' + str(cap.get(15)))
-print('White balance:' + str(cap.get(17)))
+# print('Brightness:' + str(cap.get(10)))
+# print('Contrast:' + str(cap.get(11)))
+# print('Gain:' + str(cap.get(14)))
+# print('Exposure:' + str(cap.get(15)))
+# print('White balance:' + str(cap.get(17)))
+# cap.set(15, exposure)
+# cap.set(14, gain)
+# cap.set(10, brightness)
+# cap.set(11, contrast)
+# cap.set(12, tone)
+# cap.set(17, whitebalance)
+cap.set(15, exposure2)
+cap.set(14, gain2)
+cap.set(10, brightness2)
+cap.set(11, contrast2)
+cap.set(12, tone2)
+cap.set(17, whitebalance2)
+# cap.set(15, exposure3)
+# cap.set(14, gain3)
+# cap.set(10, brightness3)
+# cap.set(11, contrast3)
+# cap.set(12, tone3)
+# cap.set(17, whitebalance3)
 while(True):
     ret, frame = cap.read()
     # frame = cv2.blur(frame,(7,7),0)
@@ -54,6 +79,16 @@ while(True):
         time.sleep(0.5)
         ret, frame = cap.read()
         cv2.imwrite(f'reference/highContrast/{name}{counter}.png', frame)
+        cap.set(15, exposure3)
+        cap.set(14, gain3)
+        cap.set(10, brightness3)
+        cap.set(11, contrast3)
+        cap.set(12, tone3)
+        cap.set(17, whitebalance3)
+        time.sleep(0.5)
+        ret, frame = cap.read()
+        cv2.imwrite(f'reference/normal/{name}{counter}.png', frame)
+        print(f'saved {name}{counter}.png')
         counter += 1
     elif cv2.waitKey(1) & 0xFF == ord('n'):
         name = input('Name:\n')
