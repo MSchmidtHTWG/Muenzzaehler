@@ -6,31 +6,6 @@ import cv2
 
 from src.lib import Coinimage
 
-config: dict[Any, Any] = {
-
-    "camera-settings": {
-        "highcontrast": {
-            "width": 640,
-            "brightness": 180,
-            "contrast": 255,
-            "saturation": 0,
-            "gain": 32,
-            "exposure": -2,
-            "white balance": 1,
-        },
-        "lowcontrast": {
-            "width": 640,
-            "brightness": 0,
-            "contrast": 0,
-            "saturation": 0,
-            "gain": 0,
-            "exposure": 0,
-            "white balance": 1,
-        },
-    },
-    "coins": regionSizeAndTone()
-}
-
 def regionSizeAndTone():
     names = ['2Euro', '1Euro', '50Cent', '20Cent', '10Cent', '5Cent', '2Cent', '1Cent']
     size = 6
@@ -58,3 +33,28 @@ def regionSizeAndTone():
                 mx = count
         sizeAndToneDict.update({n : (mi, mx, np.mean(color))})
     return sizeAndToneDict
+
+config: dict[Any, Any] = {
+    "camera-settings": {
+        "highcontrast": {
+            "width": 640,
+            "brightness": 180,
+            "contrast": 255,
+            "saturation": 0,
+            "gain": 32,
+            "exposure": -2,
+            "white balance": 1,
+        },
+        "lowcontrast": {
+            "width": 640,
+            "brightness": 0,
+            "contrast": 0,
+            "saturation": 0,
+            "gain": 0,
+            "exposure": 0,
+            "white balance": 1,
+        },
+    },
+    "coins": regionSizeAndTone()
+}
+
