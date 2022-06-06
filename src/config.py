@@ -4,23 +4,24 @@ import numpy as np
 from skimage import io
 import cv2
 
-from src.lib import Coinimage
+from lib import Coinimage
 
 def regionSizeAndTone():
     # names = ['2Euro', '1Euro', '50Cent', '20Cent', '10Cent', '5Cent', '2Cent', '1Cent']
-    names = ['2Euro', '1Euro', '20Cent', '10Cent']
-    size = 5
+    # names = ['2Euro', '1Euro', '20Cent', '10Cent']
+    names = ['2Euro']
+    size = 1
     sizeAndToneDict = dict()
     for n in names:
         mi  = sys.maxsize
         mx = 0
         color = []
         for i in range(0, size):
-            path = f'../reference/highContrast/{n}{i}.png'
-            labeledImage = Coinimage(path).highContrastToBinary().sequentialLabeling()
+            path = io.imread(f'./reference/highContrast/{n}{i}.png')
+            labeledImage = Coinimage(path).highContrastToBinary().sequentialLabeling().image
             valueList, counts = np.unique(labeledImage, return_counts=True)
             count = np.max(counts[0:len(counts)-1])
-            colorImage = io.imread(f'../reference/lowContrast/{n}{i}.png')
+            colorImage = io.imread(f'./reference/lowContrast/{n}{i}.png')
             hsvImg = cv2.cvtColor(colorImage, cv2.COLOR_BGR2HSV)
             shape = np.shape(labeledImage)
             for label in valueList:
@@ -33,9 +34,11 @@ def regionSizeAndTone():
             if count >= mx:
                 mx = count
         sizeAndToneDict.update({n : (mi, mx, np.mean(color))})
-    return sizeAndToneDict
+    return  sizeAndToneDict
 
+coins = regionSizeAndTone()
 config: dict[Any, Any] = {
+
     "camera-settings": {
         "highcontrast": {
             "width": 640,
@@ -56,6 +59,7 @@ config: dict[Any, Any] = {
             "white balance": 1,
         },
     },
-    "coins": regionSizeAndTone()
+    "coins": coins
 }
-
+print(coins)
+print(config['coins'])

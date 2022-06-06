@@ -1,15 +1,49 @@
 import cv2.cv2
 from lib import Coinimage
-from config import config
+# from config import config
 from skimage import io
 import numpy as np
 import os
 import time
 import sys
 
+coins = None
+
+def regionSizeAndTone():
+    # names = ['2Euro', '1Euro', '50Cent', '20Cent', '10Cent', '5Cent', '2Cent', '1Cent']
+    # names = ['2Euro', '1Euro', '20Cent', '10Cent']
+    names = ['2Euro']
+    size = 1
+    sizeAndToneDict = dict()
+    for n in names:
+        mi  = sys.maxsize
+        mx = 0
+        color = []
+        for i in range(0, size):
+            path = io.imread(f'C:/Muenzzaehler/reference/highContrast/{n}{i}.png')
+            labeledImage = Coinimage(path)
+            labeledImage = labeledImage.highContrastToBinary()
+            labeledImage = labeledImage.sequentialLabeling()
+            labeledImage = labeledImage.image
+            valueList, counts = np.unique(labeledImage, return_counts=True)
+            count = np.max(counts[0:len(counts)-1])
+            colorImage = io.imread(f'C:/Muenzzaehler/reference/lowContrast/{n}{i}.png')
+            hsvImg = cv2.cvtColor(colorImage, cv2.COLOR_BGR2HSV)
+            shape = np.shape(labeledImage)
+            for label in valueList:
+                for v in range(0, shape[0]):
+                    for u in range(0, shape[1]):
+                        if labeledImage[v][u] == label:
+                            color.append(hsvImg[v][u][0])
+            if count <= mi:
+                mi = count
+            if count >= mx:
+                mx = count
+        sizeAndToneDict.update({n : (mi, mx, np.mean(color))})
+    return sizeAndToneDict
 
 def predict(regionlist):
-    coins = config['coins']
+    # coins = config['coins']
     predictedCoins = []
     for region in regionlist:
         predictedCoin = None
@@ -55,32 +89,21 @@ def capture():
     # regionen filter auf high
     return process(lowcontrast,highcontrast)
 
+def predict(image):
+    return 10
 
-''' 
-@:return list of tuples for each region consisting of regionsize and mean tone
 '''
-def process(lowcontrast, highcontrast):
-    hsvImg = cv2.cvtColor(lowcontrast, cv2.COLOR_BGR2HSV)
-    regions = Coinimage(highcontrast).highContrastToBinary().sequentialLabeling()
-    # für jede region farbe aus low ziehen und area size der region
-    labels, counts = np.unique(regions.image, return_counts=True)
-    counts = counts[0:len(counts)-1]
-    shape = np.shape(regions.image)
-    colors = []
-    
-    for label in labels[0, len(label)-1]:
-        color = []
-        for v in range(0, shape[0]):
-            for u in range(0, shape[1]):
-                if regions.image[v][u] == label:
-                    color.append(hsvImg[v][u][0])
-        colors.append(np.mean(color))
-    regionlist = []
-    for i in range(0, len(colors)):
-        regionlist.append((counts[i], colors[i]))
-    
-    return regionlist
-    
+@:param image where to count the money
+'''
+def process(image):  # rückgabe Geldwert in cent zBsp.
+    img = Coinimage(image)
+    img = img.invert()
+    img = img.discreteContrast()
+    img  = img.highContrastToBinary()
+    img = img.sequentialLabeling()
+    img = img.countAreaSize()
+    return predict(img)
+
 
 ''' Tries to create a prediction off all Pictures found recursiveliy from root
 '''
@@ -92,13 +115,14 @@ def existing_images():
             if file.endswith(extensions[0]):
                 imagesList.append(io.imread(os.path.join(r,file)))
 
-    # TODO 2 BIlder übergeben
+
     for image in imagesList:
         print(f"Es wurden {process(image)} Cent gezählt")
 
 
-'''Counts the Value of the Coins
-'''
+def with_cam():
+    pass
+
 # alle Cents zählen
 def count(predictedCoins):
     result = 0
@@ -124,4 +148,14 @@ if __name__ == '__main__':
         coinsPredicted = predict(listeRegion)
         endResult = count(coinsPredicted)
         print(f'test{i}.png: ' + str(endResult))
-    
+    print(1)
+    coins = regionSizeAndTone()
+    print(coins)
+    # for i in range(0,5):
+    #     lowcontrast = io.imread(f'../reference/test{i}.png')
+    #     highcontrast = io.imread(f'../reference/test{i}.png')
+    #     listeRegion = process(lowcontrast, highcontrast)
+    #     coinsPredicted = predict(listeRegion)
+    #     endResult = count(coinsPredicted)
+    #     print(f'test{i}.png: ' + str(endResult))
+
