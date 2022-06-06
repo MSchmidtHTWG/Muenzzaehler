@@ -5,8 +5,13 @@ import cv2
 from skimage.color import rgb2gray
 
 class Coinimage:
-    def __init__(self, image:np.array):
-        self.image = image
+    def __init__(self, image:np.array=None, path:str=None):
+        if image != None:
+            self.image = image
+        elif path !=None:
+            self.image = io.imread('path')
+        else:
+            raise Exception('Invalid argument')
     
     def invert(self):
         img = self.image.copy()
