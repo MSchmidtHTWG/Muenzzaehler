@@ -4,27 +4,28 @@ import matplotlib.image as mimg
 import cv2
 from skimage.color import rgb2gray
 
+
 class Coinimage:
-    def __init__(self, image:np.array=None, path:str=None):
+    def __init__(self, image: np.array = None, path: str = None):
         if image != None:
             self.image = image
-        elif path !=None:
+        elif path != None:
             self.image = io.imread('path')
         else:
             raise Exception('Invalid argument')
-    
+
     def invert(self):
         img = self.image.copy()
         img = (img * -1) + np.amax(self.image)
         return Coinimage(img)
-    
+
     def discreteContrast(self):
         shape = np.shape(self.image)
         img = self.image.copy()
         valueList = np.unique(img)
         valueDict = dict()
         for i in range(0, len(valueList)):
-            valueDict.update({valueList[i] : i})
+            valueDict.update({valueList[i]: i})
         for v in range(shape[0]):
             for u in range(shape[1]):
                 img[v][u] = valueDict.get(self.image[v][u])
@@ -39,8 +40,8 @@ class Coinimage:
                 if img[v][u] != 0:
                     b_img[v][u] = 1
         return Coinimage(b_img)
-    
-    def sequentialLabeling(self,  n=8):
+
+    def sequentialLabeling(self, n=8):
         # img = invertedBinaryImage(image)
         img = self.image.copy()
         m = 2
@@ -63,11 +64,11 @@ class Coinimage:
                             ni = img[p[1]][p[0]]
                             if ni != k:
                                 c.append({ni, k})
-        
+
         r = list()
         for i in range(2, m):
             r.append({i})
-        
+
         for collisions in c:
             a = collisions.pop()
             b = collisions.pop()
@@ -79,7 +80,7 @@ class Coinimage:
             if ra.isdisjoint(rb):
                 ra.update(rb)
                 r.remove(rb)
-        
+
         for v in range(0, np.shape(img)[0]):
             for u in range(0, np.shape(img)[1]):
                 if img[v][u] > 1:
@@ -87,14 +88,14 @@ class Coinimage:
                         if lsets.issuperset({img[v][u]}):
                             img[v][u] = min(lsets)
         return self.invert(Coinimage(img))
-    
+
     def __labeledNeighbors(self, x, y, n=8):
         nbrs = list()
-        if x - 1 >= 0 and self.image[y][x-1] > 1:
-            nbrs.append((x-1, y))
+        if x - 1 >= 0 and self.image[y][x - 1] > 1:
+            nbrs.append((x - 1, y))
         if n == 4:
-            if y - 1 >= 0 and self.image[y-1][x] > 1:
-                nbrs.append((x, y-1))
+            if y - 1 >= 0 and self.image[y - 1][x] > 1:
+                nbrs.append((x, y - 1))
             return nbrs
         r = -1
         v = 2
@@ -104,10 +105,11 @@ class Coinimage:
             v = 1
         if y - 1 >= 0:
             for i in range(r, v):
-                if self.image[y-1][x+i] > 1:
-                    nbrs.append((x+i, y-1))
+                if self.image[y - 1][x + i] > 1:
+                    nbrs.append((x + i, y - 1))
         return nbrs
-    
+
     def countAreaSize(sql_img):
         valueList, count = np.unique(sql_img, return_counts=True)
-        return valueList[0:len(valueList)-1], count[0:len(count)-1]
+        return valueList[0:len(valueList) - 1], count[0:len(count) - 1]
+
