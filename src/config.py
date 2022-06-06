@@ -4,6 +4,8 @@ import numpy as np
 from skimage import io
 import cv2
 
+from src.lib import Coinimage
+
 config: dict[Any, Any] = {
 
     "camera-settings": {
@@ -38,9 +40,10 @@ def regionSizeAndTone():
         mx = 0
         color = []
         for i in range(0, size):
-            labeledImage = sequentialLabeling(labelForeGround(io.imread(f'reference/highContrast/{n}{i}.png')))
+            path = f'reference/highContrast/{n}{i}.png'
+            labeledImage = Coinimage(path).highContrastToBinary().sequentialLabeling()
             valueList, counts = np.unique(labeledImage, return_counts=True)
-            count = np.max(removeClutter(counts[0:len(counts)-1]))
+            count = np.max(counts[0:len(counts)-1])
             colorImage = io.imread(f'reference/lowContrast/{n}{i}.png')
             hsvImg = cv2.cvtColor(colorImage, cv2.COLOR_BGR2HSV)
             shape = np.shape(labeledImage)
