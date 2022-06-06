@@ -36,20 +36,20 @@ def capture():
     # nehme high und low contrast auf
     cap = cv2.VideoCapture(0)
     cap.set(15, config['camera-settings']['highcontrast']['exposure'])
-    cap.set(14, ['camera-settings']['highcontrast']['gain'])
-    cap.set(10, ['camera-settings']['highcontrast']['brightness'])
-    cap.set(11, ['camera-settings']['highcontrast']['contrast'])
-    cap.set(12, ['camera-settings']['highcontrast']['tone'])
-    cap.set(17, ['camera-settings']['highcontrast']['whitebalance'])
+    cap.set(14, config['camera-settings']['highcontrast']['gain'])
+    cap.set(10, config['camera-settings']['highcontrast']['brightness'])
+    cap.set(11, config['camera-settings']['highcontrast']['contrast'])
+    cap.set(12, config['camera-settings']['highcontrast']['tone'])
+    cap.set(17, config['camera-settings']['highcontrast']['whitebalance'])
     time.sleep(0.5)
     ret, highcontrast = cap.read()
     cap = cv2.VideoCapture(0)
     cap.set(15, config['camera-settings']['lowcontrast']['exposure'])
-    cap.set(14, ['camera-settings']['lowcontrast']['gain'])
-    cap.set(10, ['camera-settings']['lowcontrast']['brightness'])
-    cap.set(11, ['camera-settings']['lowcontrast']['contrast'])
-    cap.set(12, ['camera-settings']['lowcontrast']['tone'])
-    cap.set(17, ['camera-settings']['lowcontrast']['whitebalance'])
+    cap.set(14, config['camera-settings']['lowcontrast']['gain'])
+    cap.set(10, config['camera-settings']['lowcontrast']['brightness'])
+    cap.set(11, config['camera-settings']['lowcontrast']['contrast'])
+    cap.set(12, config['camera-settings']['lowcontrast']['tone'])
+    cap.set(17, config['camera-settings']['lowcontrast']['whitebalance'])
     time.sleep(0.5)
     ret, lowcontrast = cap.read()
     # regionen filter auf high
@@ -117,8 +117,11 @@ def count(predictedCoins):
     return result
 
 if __name__ == '__main__':
-    existing_images()
-    listeRegion = capture()
-    coinsPredicted = predict(listeRegion)
-    endResult = count(coinsPredicted)
+    for i in range(0,5):
+        lowcontrast = io.imread(f'../reference/test{i}.png')
+        highcontrast = io.imread(f'../reference/test{i}.png')
+        listeRegion = process(lowcontrast, highcontrast)
+        coinsPredicted = predict(listeRegion)
+        endResult = count(coinsPredicted)
+        print(f'test{i}.png: ' + str(endResult))
     
