@@ -143,14 +143,4 @@ if __name__ == '__main__':
         print(coinsPredicted)
         endResult = count(coinsPredicted)
         print(f'test{i}.png: ' + str(endResult))
-    # print(1)
-    # coins = regionSizeAndTone()
-    # print(coins)
-    # for i in range(0,5):
-    #     lowcontrast = io.imread(f'../reference/test{i}.png')
-    #     highcontrast = io.imread(f'../reference/test{i}.png')
-    #     listeRegion = process(lowcontrast, highcontrast)
-    #     coinsPredicted = predict(listeRegion)
-    #     endResult = count(coinsPredicted)
-    #     print(f'test{i}.png: ' + str(endResult))
 
