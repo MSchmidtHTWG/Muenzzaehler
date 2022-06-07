@@ -1,5 +1,4 @@
 import cv2
-from lib import Coinimage
 from config import config
 from skimage import io
 import numpy as np
@@ -7,6 +6,8 @@ import os
 import time
 import sys
 import coinimg as ci
+import PySimpleGUI as sg
+import os
 
 coins = config['coins']
 
@@ -45,7 +46,6 @@ def predict(regionlist):
 @:return list of tuples for each region consisting of regionsize and mean tone
 '''
 def capture():
-    # nehme high und low contrast auf
     cap = cv2.VideoCapture(0)
     cap.set(15, config['camera-settings']['highcontrast']['exposure'])
     cap.set(14, config['camera-settings']['highcontrast']['gain'])
@@ -64,14 +64,12 @@ def capture():
     cap.set(17, config['camera-settings']['lowcontrast']['whitebalance'])
     time.sleep(0.5)
     ret, lowcontrast = cap.read()
-    # regionen filter auf high
     return process(lowcontrast,highcontrast)
 
 
 def process(lowcontrast, highcontrast):
     hsvImg = cv2.cvtColor(lowcontrast, cv2.COLOR_BGR2HSV)
     regions = ci.sequentialLabeling(ci.highContrastToBinary(highcontrast))
-    # für jede region farbe aus low ziehen und area size der region
     labels, counts = np.unique(regions, return_counts=True)
     print(len(labels))
     counts = counts[0:len(counts)-1]
@@ -134,13 +132,33 @@ def count(predictedCoins):
     return result
 
 if __name__ == '__main__':
-    for i in range(0,5):
-        lowcontrast = io.imread(f'C://Muenzzaehler/reference/lowContrast/test{i}.png')
-        highcontrast = io.imread(f'C://Muenzzaehler/reference/highContrast/test{i}.png')
-        listeRegion = process(lowcontrast, highcontrast)
-        print(listeRegion)
-        coinsPredicted = predict(listeRegion)
-        print(coinsPredicted)
-        endResult = count(coinsPredicted)
-        print(f'test{i}.png: ' + str(endResult))
+    # for i in range(0,5):
+    #     lowcontrast = io.imread(f'C://Muenzzaehler/reference/lowContrast/test{i}.png')
+    #     highcontrast = io.imread(f'C://Muenzzaehler/reference/highContrast/test{i}.png')
+    #     regions = process(lowcontrast, highcontrast)
+    #     print(regions)
+    #     coinPredictions = predict(regions)
+    #     print(coinPredictions)
+    #     result = count(coinPredictions)
+    #     print(f'test{i}.png: ' + str(result))
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    os.chdir(dir_path)
+    layout = [[sg.Text("Hello from PySimpleGUI")], [sg.Button("OK")], [sg.Image(key="-IMAGE-")]]
+
+    # Create the window
+    window = sg.Window("Demo", layout)
+
+    # Create an event loop
+    while True:
+        event, values = window.read()
+        # End program if user closes window or
+        # presses the OK button
+        if event == "OK":
+            # filename = 'C://Muenzzaehler/reference/highContrast/2Euro0.png'
+            filename = f'../reference/highContrast/2Euro0.png'
+            window['-IMAGE-'].update(filename=filename)
+        elif event == sg.WIN_CLOSED:
+            break
+
+    window.close()
 

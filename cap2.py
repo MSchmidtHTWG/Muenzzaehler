@@ -30,6 +30,8 @@ if not cap.isOpened():
 # cap.set(17, 10000)
 counter = 0
 name ='test'
+cap.set(3, 1280)
+cap.set(4, 720)
 # print('Brightness:' + str(cap.get(10)))
 # print('Contrast:' + str(cap.get(11)))
 # print('Gain:' + str(cap.get(14)))
