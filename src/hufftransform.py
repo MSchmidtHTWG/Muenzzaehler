@@ -87,7 +87,7 @@ class HuffTransformCounter:
             tmp = predict(color, radius)
             sum += tmp[0]
             prob *= tmp[1]
-        return sum,prob
+        return sum, prob
 
 
 if __name__ == '__main__':
