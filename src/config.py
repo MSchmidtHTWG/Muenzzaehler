@@ -11,9 +11,7 @@ import coinimg as ci
 def regionSizeAndTone():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     os.chdir(dir_path)
-    # names = ['2Euro', '1Euro', '50Cent', '20Cent', '10Cent', '5Cent', '2Cent', '1Cent']
-    names = ['2Euro', '1Euro', '20Cent', '10Cent', '2Cent']
-    # names = ['2Euro']
+    names = ['2Euro', '1Euro', '50Cent', '20Cent', '10Cent', '5Cent', '2Cent', '1Cent']
     size = 5
     sizeAndToneDict = dict()
     color = list()
@@ -23,9 +21,9 @@ def regionSizeAndTone():
         color.clear()
         # print(len(color))
         for i in range(0, size):
-            img = io.imread(f'../reference/highContrast/{n}{i}.png')
-            colorImage = io.imread(f'../reference/lowContrast/{n}{i}.png')
-            hsvImg = cv2.cvtColor(colorImage, cv2.COLOR_BGR2HSV)
+            img = io.imread(f'../reference/{n}{i}.png')
+            # colorImage = io.imread(f'../reference/lowContrast/{n}{i}.png')
+            hsvImg = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
             labeledImage = ci.sequentialLabeling(ci.highContrastToBinary(img))
             shape = np.shape(labeledImage)
             labels, counts = np.unique(labeledImage, return_counts=True)

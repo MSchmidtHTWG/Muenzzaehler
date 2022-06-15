@@ -16,12 +16,33 @@ def predict2(regions):
     for region in regions:
         colorCandidates = set()
         sizeCandidates = set()
+        closest_size_candidate = ''
+        closest_color_candidate = ''
+        diffSize = sys.maxsize
+        diffColor = sys.maxsize
+
         for coin in coins:
             if coins.get(coin)[0] <= region[0] <= coins.get(coin)[1]:
                 sizeCandidates.add(coin)
-            if len(sizeCandidates) == 0:
-                pass
-    pass
+            diffMinSize = abs(coins.get(coin)[0] - region[0])
+            diffMaxSize = abs(coins.get(coin)[1] - region[0])
+            if diffMinSize < diffSize:
+                diffSize = diffMinSize
+                closest_size_candidate = coin
+            if diffMaxSize < diffSize:
+                diffSize = diffMaxSize
+                closest_size_candidate = coin
+            diffRegionColor = abs(coins.get(coin)[2] - region[1])
+            if diffRegionColor < diffColor:
+                diffColor = diffRegionColor
+                closest_color_candidate = coin
+        if len(sizeCandidates) == 1:
+            predictions.add(sizeCandidates.pop)
+        elif len(sizeCandidates) == 0:
+            predictions.add(closest_size_candidate)
+        else:
+            predictions.add(closest_color_candidate)
+    return predictions
 
 def predict(regionlist):
     predictedCoins = []
@@ -59,56 +80,8 @@ def predict(regionlist):
 '''
 def capture():
     cap = cv2.VideoCapture(0)
-    cap.set(15, config['camera-settings']['highcontrast']['exposure'])
-    cap.set(14, config['camera-settings']['highcontrast']['gain'])
-    cap.set(10, config['camera-settings']['highcontrast']['brightness'])
-    cap.set(11, config['camera-settings']['highcontrast']['contrast'])
-    cap.set(12, config['camera-settings']['highcontrast']['tone'])
-    cap.set(17, config['camera-settings']['highcontrast']['whitebalance'])
-    time.sleep(0.5)
-    ret, highcontrast = cap.read()
-    cap = cv2.VideoCapture(0)
-    cap.set(15, config['camera-settings']['lowcontrast']['exposure'])
-    cap.set(14, config['camera-settings']['lowcontrast']['gain'])
-    cap.set(10, config['camera-settings']['lowcontrast']['brightness'])
-    cap.set(11, config['camera-settings']['lowcontrast']['contrast'])
-    cap.set(12, config['camera-settings']['lowcontrast']['tone'])
-    cap.set(17, config['camera-settings']['lowcontrast']['whitebalance'])
-    time.sleep(0.5)
-    ret, lowcontrast = cap.read()
-    return process(lowcontrast,highcontrast)
-
-
-def process(lowcontrast, highcontrast):
-    hsvImg = cv2.cvtColor(lowcontrast, cv2.COLOR_BGR2HSV)
-    regions = ci.sequentialLabeling(ci.highContrastToBinary(highcontrast))
-    labels, counts = np.unique(regions, return_counts=True)
-    print(len(labels))
-    counts = counts[0:len(counts)-1]
-    labels = labels[0:len(labels)-1]
-    ccounts = []
-    clabels = []
-    shape = np.shape(regions)
-    colors = []
-    for i in range(0, len(counts)):
-        if counts[i] > 1000:
-            ccounts.append(counts[i])
-            clabels.append(labels[i])
-    counts = ccounts
-    labels = clabels
-    print(len(labels))
-    for label in labels:
-        color = []
-        for v in range(0, shape[0]):
-            for u in range(0, shape[1]):
-                if regions[v][u] == label:
-                    color.append(int(hsvImg[v][u][0]))
-        colors.append(np.mean(color))
-    regionlist = []
-    for i in range(0, len(colors)):
-        regionlist.append((counts[i], colors[i]))
-
-    return regionlist
+    ret, frame = cap.read()
+    return frame
 
 def existing_images():
     extensions = ['.png']
