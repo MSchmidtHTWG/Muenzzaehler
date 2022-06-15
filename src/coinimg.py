@@ -4,6 +4,33 @@ import matplotlib.image as mimg
 import cv2
 from skimage.color import rgb2gray
 
+'''
+Computes each regions size of a labeled image. Regions smaller than @threshold are discarded. The highest label (background)
+is discarded as well.
+@return: returns a list of tuples. Each tuple contains the label, a regions size and a list of that regions indizes.
+'''
+def regions(labeledImage, threshold=0):
+    regions = list()
+    labels, counts = np.unique(labeledImage, return_counts=True)
+    for i in range(0,len(labels)-1):
+        if counts[i] < threshold:
+            continue
+        indizes = np.where(labeledImage == i)
+        regions.append((labels[i], counts[i], indizes))
+    return regions
+
+def rgbToBinary(coloredImage, threshold):
+    shape = np.shape(img)
+    img = rgb2gray(coloredImage)
+    normalized_image = img / np.amax(img)
+    normalized_threshold = threshold / 255
+    b_img = np.zeros((shape[0], shape[1]))
+    for v in range(0, shape[0]):
+        for u in range(0, shape[1]):
+            if normalized_image[v][u] > normalized_threshold:
+                b_img[v][u] = 1
+    return b_img
+
 def removeClutter(array, threshold=1000):
     ret = []
     for i in array:
@@ -43,9 +70,8 @@ def highContrastToBinary(image):
     return b_img
 
 
-def sequentialLabeling(image, n=8):
-    # img = invertedBinaryImage(image)
-    img = image.copy()
+def sequentialLabeling(binaryImage, n=8):
+    img = binaryImage.copy()
     m = 2
     c = list()
     for v in range(0, np.shape(img)[0]):
@@ -66,11 +92,9 @@ def sequentialLabeling(image, n=8):
                         ni = img[p[1]][p[0]]
                         if ni != k:
                             c.append({ni, k})
-    
     r = list()
     for i in range(2, m):
         r.append({i})
-    
     for collisions in c:
         a = collisions.pop()
         b = collisions.pop()
@@ -82,7 +106,6 @@ def sequentialLabeling(image, n=8):
         if ra.isdisjoint(rb):
             ra.update(rb)
             r.remove(rb)
-    
     for v in range(0, np.shape(img)[0]):
         for u in range(0, np.shape(img)[1]):
             if img[v][u] > 1:

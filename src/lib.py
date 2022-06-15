@@ -4,6 +4,18 @@ import matplotlib.image as mimg
 import cv2
 from skimage.color import rgb2gray
 
+'''
+Computes each regions size of a labeled image. Regions smaller than @threshold are discarded. The highest label (background)
+is discarded as well.
+@return: returns a list of tuples. Each tuple contains the label, a regions size and a list of that regions indizes.
+'''
+def regions(labeledImage, threshold=0):
+    regions = list()
+    labels, counts = np.unique(labeledImage, return_counts=True)
+    for i in range(0,len(labels)-1):
+        indizes = np.where(labeledImage == i)
+        regions.append((labels[i], counts[i], indizes))
+    return regions
 
 def __labeledNeighbors(image, x, y, n=8):
     nbrs = list()
@@ -25,6 +37,17 @@ def __labeledNeighbors(image, x, y, n=8):
                 nbrs.append((x+i, y-1))
     return nbrs
 
+def rgbToBinary(coloredImage, threshold):
+    shape = np.shape(img)
+    img = rgb2gray(coloredImage)
+    normalized_image = img / np.amax(img)
+    normalized_threshold = threshold / 255
+    b_img = np.zeros((shape[0], shape[1]))
+    for v in range(0, shape[0]):
+        for u in range(0, shape[1]):
+            if normalized_image[v][u] > normalized_threshold:
+                b_img[v][u] = 1
+    return b_img
 
 def highContrastToBinary(image):
     img = rgb2gray(image)
@@ -36,7 +59,11 @@ def highContrastToBinary(image):
                 b_img[v][u] = 1
     return b_img
 
-
+'''
+Takes a binary image(background = 0, foreground = 1) and returns a sequentially labeled inverted image.
+Each region has its own distinct label. The background has the highest label.
+@return: returns sequentially labeled and inverted image.
+'''
 def sequentialLabeling(image, n=8):
     # img = invertedBinaryImage(image)
     img = image.copy()
