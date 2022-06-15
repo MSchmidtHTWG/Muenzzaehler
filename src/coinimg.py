@@ -4,24 +4,47 @@ import matplotlib.image as mimg
 import cv2
 from skimage.color import rgb2gray
 
+def predict(regions):
+    pass
+
 '''
-Computes each regions size of a labeled image. Regions smaller than @threshold are discarded. The highest label (background)
+Computes region sizes and region colors from a 24bit rgb image. 
+The image will be binarized with @threshold differentiating between
+foreground and background, then it will be labeled.
+For color extraction, the image will be converted from RGB to HSV.
+Regions smaller than @minSize are discarded. The highest label (background)
 is discarded as well.
-@return: returns a list of tuples. Each tuple contains the label, a regions size and a list of that regions indizes.
+@return: returns a list of tuples for each region. Each tuple contains a regions size and its color.
+         If return_steps=True, returns the list of tuples and three intermediary images from the processing steps.
 '''
-def regions(labeledImage, threshold=0):
+def regions(image, minRegionSize=0, threshold=0, return_steps=False):
+    binaryImage = rgbToBinary(image, threshold)
+    # binaryImage = highContrastToBinary(image)
+    labeledImage = discreteContrast(sequentialLabeling(binaryImage))
+    hsvImage = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     regions = list()
+    
+    # for every region (label), compute its size and color
     labels, counts = np.unique(labeledImage, return_counts=True)
+    # print(len(labels))
+    # print(len(counts))
     for i in range(0,len(labels)-1):
-        if counts[i] < threshold:
+        if counts[i] < minRegionSize:
             continue
         indizes = np.where(labeledImage == labels[i])
-        regions.append((labels[i], counts[i], indizes))
+        colors = []
+        for j in range(0, len(indizes[0])):
+            colors.append(hsvImage[indizes[0][j]][indizes[1][j]])
+        color = np.mean(colors)
+        regions.append((counts[i], color))
+        
+    if return_steps:
+        return regions, binaryImage, labeledImage, hsvImage
     return regions
 
 def rgbToBinary(coloredImage, threshold):
-    shape = np.shape(img)
     img = rgb2gray(coloredImage)
+    shape = np.shape(img)
     normalized_image = img / np.amax(img)
     normalized_threshold = threshold / 255
     b_img = np.zeros((shape[0], shape[1]))
@@ -37,6 +60,18 @@ def removeClutter(array, threshold=1000):
         if i > threshold:
             ret.append(i)
     return ret
+
+def discreteContrast(filteredImage):
+    shape = np.shape(filteredImage)
+    img = filteredImage.copy()
+    valueList = np.unique(img)
+    valueDict = dict()
+    for i in range(0, len(valueList)):
+        valueDict.update({valueList[i] : i})
+    for v in range(shape[0]):
+        for u in range(shape[1]):
+            img[v][u] = valueDict.get(filteredImage[v][u])
+    return img
 
 def labeledNeighbors(image, x, y, n=8):
     nbrs = list()
