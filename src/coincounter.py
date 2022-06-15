@@ -13,10 +13,15 @@ coins = config['coins']
 
 def predict2(regions):
     predictions = []
-    colorCandidates = set()
-    sizeCandidates = set()
-    
-
+    for region in regions:
+        colorCandidates = set()
+        sizeCandidates = set()
+        for coin in coins:
+            if coins.get(coin)[0] <= region[0] <= coins.get(coin)[1]:
+                sizeCandidates.add(coin)
+            if len(sizeCandidates) == 0:
+                pass
+    pass
 
 def predict(regionlist):
     predictedCoins = []
