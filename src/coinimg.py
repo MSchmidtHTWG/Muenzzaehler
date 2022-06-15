@@ -22,6 +22,8 @@ def regions(image, minRegionSize=0, threshold=0, return_steps=False):
     # binaryImage = highContrastToBinary(image)
     labeledImage = discreteContrast(sequentialLabeling(binaryImage))
     hsvImage = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    # hsvImage[:,:,1] = 255
+    # hsvImage[:,:,2] = 255
     regions = list()
     
     # for every region (label), compute its size and color
@@ -34,7 +36,7 @@ def regions(image, minRegionSize=0, threshold=0, return_steps=False):
         indizes = np.where(labeledImage == labels[i])
         colors = []
         for j in range(0, len(indizes[0])):
-            colors.append(hsvImage[indizes[0][j]][indizes[1][j]])
+            colors.append(hsvImage[indizes[0][j]][indizes[1][j]][0])
         color = np.mean(colors)
         regions.append((counts[i], color))
         
