@@ -15,7 +15,7 @@ def regions(labeledImage, threshold=0):
     for i in range(0,len(labels)-1):
         if counts[i] < threshold:
             continue
-        indizes = np.where(labeledImage == i)
+        indizes = np.where(labeledImage == labels[i])
         regions.append((labels[i], counts[i], indizes))
     return regions
 
