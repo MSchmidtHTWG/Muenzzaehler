@@ -11,6 +11,13 @@ import os
 
 coins = config['coins']
 
+def predict2(regions):
+    predictions = []
+    colorCandidates = set()
+    sizeCandidates = set()
+    
+
+
 def predict(regionlist):
     predictedCoins = []
     for region in regionlist:
