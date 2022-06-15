@@ -83,11 +83,9 @@ class HuffTransformCounter:
 
         sum = 0
         prob = 1
-        for color, radius in coinData:
-            tmp = predict(color, radius)
-            sum += tmp[0]
-            prob *= tmp[1]
-        return sum,prob
+
+        tmp = predict(color, radius) # argument is list of tuples (regionSize, mean hsv color)
+        return (count(tmp),1)
 
 
 if __name__ == '__main__':
