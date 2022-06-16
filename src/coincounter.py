@@ -13,14 +13,6 @@ from PIL import Image
 import warnings
 warnings.filterwarnings("ignore")
 
-''' Captures a high and a low contrast pic and processes those
-@:return list of tuples for each region consisting of regionsize and mean tone
-'''
-def capture():
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-    ret, frame = cap.read()
-    return frame
-
 def existing_images():
     extensions = ['.png']
     imagesList = []
@@ -58,10 +50,10 @@ if __name__ == '__main__':
         event, values = window.read(timeout=10)
         # End program if user closes window
         if event == "Process":
-            window['-IMAGE-'].update(filename=None)
-            window['-Binary-'].update(filename=None)
-            window['-Label-'].update(filename=None)
-            window['-GroupImage-'].update(filename=None)
+            window['-IMAGE-'].update(filename=None, size=dim)
+            window['-Binary-'].update(filename=None, size=dim)
+            window['-Label-'].update(filename=None, size=dim)
+            window['-GroupImage-'].update(filename=None, size=dim)
             window['-Count-'].update("Coins counted: --")
             window.refresh()
             ret, frame = cap.read()
@@ -89,10 +81,10 @@ if __name__ == '__main__':
             window['-Count-'].update("Coins counted: " + countedCoins)
             window['-GroupImage-'].update(filename=f'../tmp/groupimage.png')
         elif event == "Test":
-            window['-IMAGE-'].update(filename=None)
-            window['-Binary-'].update(filename=None)
-            window['-Label-'].update(filename=None)
-            window['-GroupImage-'].update(filename=None)
+            window['-IMAGE-'].update(filename=None, size=dim)
+            window['-Binary-'].update(filename=None, size=dim)
+            window['-Label-'].update(filename=None, size=dim)
+            window['-GroupImage-'].update(filename=None, size=dim)
             window['-Count-'].update("Coins counted: --")
             window.refresh()
             filename = f'../testimages/test12.png'
