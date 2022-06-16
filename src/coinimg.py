@@ -11,10 +11,10 @@ def predict_hough(regions, image=None):
     coins = loadDict(hough=True)
     pass
 
-def predict(regions, image=None):
+def predict(regions, shape=None):
     coins = loadDict()
-    if not image is None:
-        groupImage = np.full(np.shape(image), 255)
+    if not shape is None:
+        groupImage = np.full(shape, 255)
     predictions = []
     for region in regions:
         diffColor = sys.maxsize
@@ -32,7 +32,7 @@ def predict(regions, image=None):
             colorCandidates = group2
         else:
             colorCandidates = group3
-        print(colorCandidates)
+        # print(colorCandidates)
         candidates = set()
         diffSize = sys.maxsize
         for candidate in colorCandidates:
@@ -47,14 +47,14 @@ def predict(regions, image=None):
                 diffSize = diffMaxSize
                 closest_size_candidate = candidate
         if len(candidates) == 1:
-            print('size match')
-            print(candidates)
+            # print('size match')
+            # print(candidates)
             predictions.append(candidates.pop())
         else:
-            print('no size match')
-            print(closest_size_candidate)
+            # print('no size match')
+            # print(closest_size_candidate)
             predictions.append(closest_size_candidate)
-        if not image is None:
+        if not shape is None:
             if predictions[len(predictions)-1] == '2Euro':
                 r = 102
                 g = 204
@@ -91,8 +91,8 @@ def predict(regions, image=None):
                 groupImage[region[2][0][i]][region[2][1][i]][0] = r
                 groupImage[region[2][0][i]][region[2][1][i]][1] = g
                 groupImage[region[2][0][i]][region[2][1][i]][2] = b
-        print('=======================================')
-    if not image is None:
+        # print('=======================================')
+    if not shape is None:
         return predictions, groupImage
     return predictions
 
@@ -173,7 +173,7 @@ is discarded as well.
 '''
 def regions(image, minRegionSize=0, threshold=0, return_steps=False):
     binaryImage = rgbToBinary(image, threshold)
-    labeledImage = discreteContrast(sequentialLabeling(binaryImage))
+    labeledImage = sequentialLabeling(binaryImage)
     hsvImage = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
 
     regions = list()
@@ -182,7 +182,7 @@ def regions(image, minRegionSize=0, threshold=0, return_steps=False):
     labels, counts = np.unique(labeledImage, return_counts=True)
     for i in range(0,len(labels)-1):
         if counts[i] < minRegionSize:
-            labeledImage[labeledImage == i] = len(labels)
+            labeledImage[labeledImage == labels[i]] = labels[len(labels)-1]
             continue
         indizes = np.where(labeledImage == labels[i])
         colors = []
@@ -192,7 +192,7 @@ def regions(image, minRegionSize=0, threshold=0, return_steps=False):
         regions.append((counts[i], color, indizes))
         
     if return_steps:
-        return regions, binaryImage, labeledImage
+        return regions, binaryImage, discreteContrast(labeledImage)
     return regions
 
 def rgbToBinary(coloredImage, threshold):
