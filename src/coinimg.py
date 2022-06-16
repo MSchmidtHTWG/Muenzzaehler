@@ -7,76 +7,110 @@ import pickle
 import os
 import sys
 
-def predict(regions):
+def predict_hough(regions, image=None):
+    coins = loadDict(hough=True)
+    pass
+
+def predict(regions, image=None):
     coins = loadDict()
+    if not image is None:
+        groupImage = np.full(np.shape(image), 255)
     predictions = []
     for region in regions:
-        colorCandidates = set()
-        sizeCandidates = set()
-        closest_size_candidate = ''
-        closest_color_candidate = ''
-        diffSize = sys.maxsize
         diffColor = sys.maxsize
-
-        for coin in coins:
-            if coins.get(coin)[0] <= region[0] <= coins.get(coin)[1]:
-                sizeCandidates.add(coin)
-            diffMinSize = abs(coins.get(coin)[0] - region[0])
-            diffMaxSize = abs(coins.get(coin)[1] - region[0])
+        group1 = {'2Euro', '1Euro'}
+        group2 = {'50Cent', '20Cent', '10Cent'}
+        group3 = {'5Cent', '2Cent', '1Cent'}
+        for candidate in coins:
+            diffRegionColor = abs(coins.get(candidate)[2] - region[1])
+            if diffRegionColor < diffColor:
+                diffColor = diffRegionColor
+                closest_color_candidate = candidate
+        if group1.issuperset({closest_color_candidate}):
+            colorCandidates = group1
+        elif group2.issuperset({closest_color_candidate}):
+            colorCandidates = group2
+        else:
+            colorCandidates = group3
+        print(colorCandidates)
+        candidates = set()
+        diffSize = sys.maxsize
+        for candidate in colorCandidates:
+            if coins.get(candidate)[0] <= region[0] <= coins.get(candidate)[1]:
+                candidates.add(candidate)
+            diffMinSize = abs(coins.get(candidate)[0] - region[0])
+            diffMaxSize = abs(coins.get(candidate)[1] - region[0])
             if diffMinSize < diffSize:
                 diffSize = diffMinSize
-                closest_size_candidate = coin
+                closest_size_candidate = candidate
             if diffMaxSize < diffSize:
                 diffSize = diffMaxSize
-                closest_size_candidate = coin
-        if len(sizeCandidates) == 1:
-            print('1 size candidate')
-            print(sizeCandidates)
-            print(region[0])
-            print(region[1])
-            predictions.append(sizeCandidates.pop())
-        elif len(sizeCandidates) == 0:
-            group1 = {'2Euro', '1Euro'}
-            group2 = {'50Cent', '20cent', '10Cent'}
-            group3 = {'5Cent', '2Cent', '1Cent'}
-            for candidate in coins:
-                diffRegionColor = abs(coins.get(candidate)[2] - region[1])
-                if diffRegionColor < diffColor:
-                    diffColor = diffRegionColor
-                    closest_color_candidate = candidate
-            if group1.issuperset({closest_color_candidate}):
-                colorCandidates = group1
-            elif group2.issuperset({closest_color_candidate}):
-                colorCandidates = group2
-            else:
-                colorCandidates = group3
-            diffSize = sys.maxsize
-            print('colorcandidates')
-            print(colorCandidates)
-            print(region[0])
-            print(region[1])
-            for candidate in colorCandidates:
-                diffMinSize = abs(coins.get(candidate)[0] - region[0])
-                diffMaxSize = abs(coins.get(candidate)[1] - region[0])
-                if diffMinSize < diffSize:
-                    diffSize = diffMinSize
-                    closest_size_candidate = coin
-                if diffMaxSize < diffSize:
-                    diffSize = diffMaxSize
-                    closest_size_candidate = coin
-            predictions.append(closest_size_candidate)
+                closest_size_candidate = candidate
+        if len(candidates) == 1:
+            print('size match')
+            print(candidates)
+            predictions.append(candidates.pop())
         else:
-            print('sizecandidates')
-            print(sizeCandidates)
-            print(region[0])
-            print(region[1])
-            for candidate in sizeCandidates:
-                diffRegionColor = abs(coins.get(candidate)[2] - region[1])
-                if diffRegionColor < diffColor:
-                    diffColor = diffRegionColor
-                    closest_color_candidate = candidate
-            predictions.append(closest_color_candidate)
+            print('no size match')
+            print(closest_size_candidate)
+            predictions.append(closest_size_candidate)
+        if not image is None:
+            if predictions[len(predictions)-1] == '2Euro':
+                r = 102
+                g = 204
+                b = 255
+            elif predictions[len(predictions)-1] == '1Euro':
+                r = 0
+                g = 153
+                b = 230
+            elif predictions[len(predictions)-1] == '50Cent':
+                r = 255
+                g = 230
+                b = 128
+            elif predictions[len(predictions)-1] == '20Cent':
+                r = 255
+                g = 209
+                b = 26
+            elif predictions[len(predictions)-1] == '10Cent':
+                r = 204
+                g = 163
+                b = 0
+            elif predictions[len(predictions)-1] == '5Cent':
+                r = 255
+                g = 133
+                b = 102
+            elif predictions[len(predictions)-1] == '2Cent':
+                r = 255
+                g = 71
+                b = 26
+            elif predictions[len(predictions)-1] == '1Cent':
+                r = 204
+                g = 41
+                b = 0
+            for i in range(0, len(region[2][0])):
+                groupImage[region[2][0][i]][region[2][1][i]][0] = r
+                groupImage[region[2][0][i]][region[2][1][i]][1] = g
+                groupImage[region[2][0][i]][region[2][1][i]][2] = b
+        print('=======================================')
+    if not image is None:
+        return predictions, groupImage
     return predictions
+
+def count(predictions):
+    result = 0
+    coin = {
+        '2Euro': 200,
+        '1Euro': 100,
+        '50Cent': 50,
+        '20Cent': 20,
+        '10Cent': 10,
+        '5Cent': 5,
+        '2Cent': 2,
+        '1Cent': 1
+    }
+    for prediction in predictions:
+        result += coin.get(prediction)
+    return str(result/100) + '€'
 
 def coindict():
     dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -110,15 +144,23 @@ def coindict():
         cd.update({name : (min_region_size, max_region_size, color)})
     return cd
 
-def loadDict():
+def loadDict(hough=False):
+    if hough:
+        with open('coin_dictionary_hough.pkl', 'rb') as f:
+            cd = pickle.load(f)
+        return cd
     with open('coin_dictionary.pkl', 'rb') as f:
         cd = pickle.load(f)
     return cd
 
-def saveDict():
+def saveDict(hough=False):
+    if hough:
+        with open('coin_dictionary_hough.pkl', 'wb') as f:
+            pickle.dump(dictionary, f)
     dictionary = coindict()
     with open('coin_dictionary.pkl', 'wb') as f:
         pickle.dump(dictionary, f)
+
 '''
 Computes region sizes and region colors from a 24bit rgb image. 
 The image will be binarized with @threshold differentiating between
@@ -131,29 +173,26 @@ is discarded as well.
 '''
 def regions(image, minRegionSize=0, threshold=0, return_steps=False):
     binaryImage = rgbToBinary(image, threshold)
-    # binaryImage = highContrastToBinary(image)
     labeledImage = discreteContrast(sequentialLabeling(binaryImage))
-    hsvImage = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    # hsvImage[:,:,1] = 255
-    # hsvImage[:,:,2] = 255
+    hsvImage = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+
     regions = list()
     
     # for every region (label), compute its size and color
     labels, counts = np.unique(labeledImage, return_counts=True)
-    # print(len(labels))
-    # print(len(counts))
     for i in range(0,len(labels)-1):
         if counts[i] < minRegionSize:
+            labeledImage[labeledImage == i] = len(labels)
             continue
         indizes = np.where(labeledImage == labels[i])
         colors = []
         for j in range(0, len(indizes[0])):
             colors.append(hsvImage[indizes[0][j]][indizes[1][j]][0])
         color = np.mean(colors)
-        regions.append((counts[i], color))
+        regions.append((counts[i], color, indizes))
         
     if return_steps:
-        return regions, binaryImage, labeledImage, hsvImage
+        return regions, binaryImage, labeledImage
     return regions
 
 def rgbToBinary(coloredImage, threshold):
@@ -167,13 +206,6 @@ def rgbToBinary(coloredImage, threshold):
             if normalized_image[v][u] > normalized_threshold:
                 b_img[v][u] = 1
     return b_img
-
-def removeClutter(array, threshold=1000):
-    ret = []
-    for i in array:
-        if i > threshold:
-            ret.append(i)
-    return ret
 
 def discreteContrast(filteredImage):
     shape = np.shape(filteredImage)
@@ -206,18 +238,6 @@ def labeledNeighbors(image, x, y, n=8):
             if image[y-1][x+i] > 1:
                 nbrs.append((x+i, y-1))
     return nbrs
-
-
-def highContrastToBinary(image):
-    img = rgb2gray(image)
-    shape = np.shape(img)
-    b_img = np.zeros((shape[0], shape[1]))
-    for v in range(0, shape[0]):
-        for u in range(0, shape[1]):
-            if img[v][u] != 0:
-                b_img[v][u] = 1
-    return b_img
-
 
 def sequentialLabeling(binaryImage, n=8):
     img = binaryImage.copy()

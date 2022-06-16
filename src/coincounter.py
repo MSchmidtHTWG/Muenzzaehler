@@ -1,5 +1,5 @@
 import cv2
-from config import config
+# from config import config
 from skimage import io
 import numpy as np
 import os
@@ -8,72 +8,6 @@ import sys
 import coinimg as ci
 import PySimpleGUI as sg
 import os
-
-coins = config['coins']
-
-def predict2(regions):
-    predictions = []
-    for region in regions:
-        colorCandidates = set()
-        sizeCandidates = set()
-        closest_size_candidate = ''
-        closest_color_candidate = ''
-        diffSize = sys.maxsize
-        diffColor = sys.maxsize
-
-        for coin in coins:
-            if coins.get(coin)[0] <= region[0] <= coins.get(coin)[1]:
-                sizeCandidates.add(coin)
-            diffMinSize = abs(coins.get(coin)[0] - region[0])
-            diffMaxSize = abs(coins.get(coin)[1] - region[0])
-            if diffMinSize < diffSize:
-                diffSize = diffMinSize
-                closest_size_candidate = coin
-            if diffMaxSize < diffSize:
-                diffSize = diffMaxSize
-                closest_size_candidate = coin
-            diffRegionColor = abs(coins.get(coin)[2] - region[1])
-            if diffRegionColor < diffColor:
-                diffColor = diffRegionColor
-                closest_color_candidate = coin
-        if len(sizeCandidates) == 1:
-            predictions.add(sizeCandidates.pop)
-        elif len(sizeCandidates) == 0:
-            predictions.add(closest_size_candidate)
-        else:
-            predictions.add(closest_color_candidate)
-    return predictions
-
-def predict(regionlist):
-    predictedCoins = []
-    for region in regionlist:
-        predictedCoin = None
-        candidates = []
-        for coin in coins:
-            if coins.get(coin)[0] <= region[0] <= coins.get(coin)[1]:
-                candidates.append(coin)
-        if len(candidates) > 1:
-            maxSize = sys.maxsize
-            for candidate in candidates:
-                diff = abs(coins.get(candidate)[2] - region[1])
-                if diff < maxSize:
-                    maxSize = diff
-                    predictedCoin = candidate          
-        elif len(candidates) == 1:
-            predictedCoin = candidates[0]
-        else:
-            maxSize = sys.maxsize
-            for coin in coins:
-                diff = abs(coins.get(coin)[0] - region[0])
-                diff2 = abs(coins.get(coin)[1] - region[0])
-                if diff < maxSize:
-                    maxSize = diff
-                    predictedCoin = coin
-                if diff2 < maxSize:
-                    maxSize = diff2
-                    predictedCoin = coin
-        predictedCoins.append(predictedCoin)
-    return predictedCoins
 
 ''' Captures a high and a low contrast pic and processes those
 @:return list of tuples for each region consisting of regionsize and mean tone
@@ -95,55 +29,51 @@ def existing_images():
     for image in imagesList:
         print(f"Es wurden {process(image)} Cent gezählt")
 
-
-def with_cam():
-    pass
-
-# alle Cents zählen
-def count(predictedCoins):
-    result = 0
-    coin = {
-        '2Euro': 200,
-        '1Euro': 100,
-        '50Cent': 50,
-        '20Cent': 20,
-        '10Cent': 10,
-        '5Cent': 5,
-        '2Cent': 2,
-        '1Cent': 1
-    }
-    for predictedCoin in predictedCoins:
-        result += coin.get(predictedCoin)
-    return result
-
 if __name__ == '__main__':
-    # for i in range(0,5):
-    #     lowcontrast = io.imread(f'C://Muenzzaehler/reference/lowContrast/test{i}.png')
-    #     highcontrast = io.imread(f'C://Muenzzaehler/reference/highContrast/test{i}.png')
-    #     regions = process(lowcontrast, highcontrast)
-    #     print(regions)
-    #     coinPredictions = predict(regions)
-    #     print(coinPredictions)
-    #     result = count(coinPredictions)
-    #     print(f'test{i}.png: ' + str(result))
     dir_path = os.path.dirname(os.path.realpath(__file__))
     os.chdir(dir_path)
-    layout = [[sg.Text("Hello from PySimpleGUI")], [sg.Button("OK")], [sg.Image(key="-IMAGE-")]]
+    layout = [
+        [sg.Text("Coins counted: 0€", key='-Count-')],
+        [sg.Button("Process"), sg.Button("Coin count")],
+        [sg.Image(key="-IMAGE-",size=(160,120)), sg.Image(key="-Binary-",size=(160,120))],
+        [sg.Image(key="-Label-",size=(160,120)), sg.Image(key="-GroupImage-",size=(160,120))]
+    ]
 
     # Create the window
-    window = sg.Window("Demo", layout)
-
+    window = sg.Window("Coin Counter", layout, element_justification='c') # Alternative: layout ver grössern
+    image = None
+    regions = None
     # Create an event loop
     while True:
         event, values = window.read()
         # End program if user closes window or
         # presses the OK button
-        if event == "OK":
-            # filename = 'C://Muenzzaehler/reference/highContrast/2Euro0.png'
-            filename = f'../reference/highContrast/2Euro0.png'
-            window['-IMAGE-'].update(filename=filename)
+        if event == "Process":
+            filename = f'../testimages/test10.png'
+            image = io.imread(filename)
+            width = 160
+            height = 120 # keep original height
+            dim = (width, height)
+            # resize image
+            thumbnail = cv2.resize(image, dim, interpolation = cv2.INTER_AREA)
+            io.imsave(f'../tmp/image.png', thumbnail)
+            window['-IMAGE-'].update(filename=f'../tmp/image.png')
+            regions, binaryimage, labelImage = ci.regions(image, minRegionSize= 500, threshold=25, return_steps=True)
+            binaryimage = cv2.resize(binaryimage, dim, interpolation = cv2.INTER_AREA)
+            labelImage = cv2.resize(labelImage, dim, interpolation = cv2.INTER_AREA)
+            io.imsave(f'../tmp/binaryimage.png', binaryimage)
+            io.imsave(f'../tmp/labelimage.png',labelImage)
+            window['-Binary-'].update(filename=f'../tmp/binaryimage.png')
+            window['-Label-'].update(filename=f'../tmp/labelimage.png')             
+        if event == "Coin count":
+            predict, groupImage = ci.predict(regions, image)
+            countedCoins = ci.count(predict)
+            groupImage = np.array(groupImage, dtype='uint8')
+            groupImage = cv2.resize(groupImage, dim, interpolation = cv2.INTER_AREA)
+            io.imsave(f'../tmp/groupimage.png',groupImage)
+            window['-Count-'].update("Coins counted: " + countedCoins)
+            window['-GroupImage-'].update(filename=f'../tmp/groupimage.png')
         elif event == sg.WIN_CLOSED:
             break
-
     window.close()
 
