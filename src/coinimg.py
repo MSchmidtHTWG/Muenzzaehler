@@ -11,8 +11,11 @@ def predict_hough(regions, image=None):
     coins = loadDict(hough=True)
     pass
 
-def predict(regions, shape=None):
-    coins = loadDict()
+def predict(regions, shape=None, hough=False):
+    if hough:
+        coins = loadDict(hough=True)
+    else:
+        coins = loadDict()
     if not shape is None:
         groupImage = np.full(shape, 255)
     predictions = []
@@ -190,7 +193,6 @@ def regions(image, minRegionSize=0, threshold=0, return_steps=False):
             colors.append(hsvImage[indizes[0][j]][indizes[1][j]][0])
         color = np.mean(colors)
         regions.append((counts[i], color, indizes))
-        
     if return_steps:
         return regions, binaryImage, discreteContrast(labeledImage)
     return regions
