@@ -1,16 +1,16 @@
-from math import ceil, floor
-
+from math import ceil, floor, nan
+from coinimg import predict_hough
 import numpy as np
 import cv2 as cv
 
 
-class HuffTransformCounter:
+class HoughTransformCounter:
 
     @staticmethod
     def run(**kwargs) -> (int, float):
         """
         :param kwargs: image as image=np.array of the image or path as  'path=/path/to/image'
-        :return a Tuple with (amount in cents, probability)
+        :return a Tuple with (amount as String, probability)
         """
 
         def getCircles(image: np.array) -> {}:
@@ -53,17 +53,23 @@ class HuffTransformCounter:
             return np.array(result)
 
         def getColor(image, coords: []):
+            """Die Methode erhält ein RGB Bild und berechnet den Median HSV hue wert über alle koordinaten
+            @param image as RGB  Image/np.array
+            @:param coords Liste aus Koordinaten Tupel [(x,y)]
+            """
             hsvImage = cv.cvtColor(image, cv.COLOR_RGB2HSV)
             colors = []
             for element in coords:
-                color = hsvImage[element[0], element[1]]
-                colors.append(color[0])
+                color = hsvImage[element[1], element[0]]
+                if color[0] != 0:
+                    colors.append(color[0])
                 # print(color)
             return np.median(colors)
 
-        def predict(hsvColor: float, radius: int) -> (int,float):
+        def predictAll(all:[])->str:
             '''add the prediction -> match color and radius to a coin'''
-            raise NotImplemented()
+            return predict_hough(all)
+
 
         if "image" in kwargs.keys():
             image = kwargs['image']
@@ -80,13 +86,11 @@ class HuffTransformCounter:
             color = getColor(image, coords=coords)
             radius = circle[2]
             coinData.append((color, radius))
-
-        sum = 0
-        prob = 1
-
-        tmp = predict(color, radius) # argument is list of tuples (regionSize, mean hsv color)
-        return (count(tmp),1)
+        probability = nan # currently not calculated
+        # argument is list of tuples (regionSize, mean hsv color)
+        return predictAll(coinData), probability
 
 
 if __name__ == '__main__':
-    HuffTransformCounter.run(path='../testimages/0.png')
+    amount = HoughTransformCounter.run(path='../reference/1Cent0.png')
+    print(amount)
