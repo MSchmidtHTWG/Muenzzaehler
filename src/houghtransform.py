@@ -1,5 +1,6 @@
 from math import ceil, floor, nan
 from coinimg import predict_hough
+from skimage import io
 import numpy as np
 import cv2 as cv
 
@@ -7,18 +8,19 @@ import cv2 as cv
 class HoughTransformCounter:
 
     @staticmethod
-    def run(**kwargs) -> (int, float):
+    def run(**kwargs) -> (int, list, float):
         """
         :param kwargs: image as image=np.array of the image or path as  'path=/path/to/image'
-        :return a Tuple with (amount as String, probability)
+        :return a Tuple with (amount as String, list of 3 Images, probability)
         """
 
-        def getCircles(image: np.array) -> {}:
+        def getCircles(image: np.array) -> ({}, np.array, np.array):
+            image = image.copy()
             gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-            src = image.copy()
             blured = cv.medianBlur(gray, 5)
             rows = gray.shape[0]
-            return cv.HoughCircles(blured, cv.HOUGH_GRADIENT, 1, rows / 8, param1=100, param2=30, minRadius=10)
+            return cv.HoughCircles(blured, cv.HOUGH_GRADIENT, 1, rows / 8, param1=100, param2=30,
+                                   minRadius=10), gray, blured
 
         def drawCircles(circles, image):
             image = image.copy()
@@ -37,12 +39,16 @@ class HoughTransformCounter:
         def getMinSquare(circle) -> (int, int, int, int):
             return circle[0] - circle[2], circle[0] + circle[2], circle[1] - circle[2], circle[1] + circle[2]
 
-        def getCoinCoord(circle) -> []:
+        def getCoinCoord(circle, xMaxImage, yMaxImage) -> []:
             result = []
             circleX = circle[0]
             circleY = circle[1]
             radius = circle[2]
             xMin, xMax, yMin, yMax = getMinSquare(circle)
+            xMax = min(xMaxImage, xMax)
+            yMax = min(yMaxImage, yMax)
+            tmpxMax = 0
+            tmpyMax = 0
             for x in range(ceil(xMin), floor(xMax)):
                 for y in range(ceil(yMin), floor(yMax)):
                     dx = x - circleX
@@ -59,38 +65,35 @@ class HoughTransformCounter:
             """
             hsvImage = cv.cvtColor(image, cv.COLOR_RGB2HSV)
             colors = []
+            rgb = [0, 0, 0]
             for element in coords:
-                color = hsvImage[element[1], element[0]]
-                if color[0] != 0:
-                    colors.append(color[0])
-                # print(color)
+                color = hsvImage[element[1], element[0]]  # ??? x und y koordinaten sind in np.array invertiert
+                colors.append(color[0])
             return np.mean(colors)
 
-        def predictAll(all:[])->str:
+        def predictAll(all: []) -> str:
             '''add the prediction -> match color and radius to a coin'''
             return predict_hough(all)
-
 
         if "image" in kwargs.keys():
             image = kwargs['image']
         elif "path" in kwargs.keys():
-            image = cv.imread(kwargs['path'], cv.IMREAD_COLOR)
+            image = io.imread(kwargs['path'])
         else:
             raise ValueError(
                 "You either need to pass the image as 'image=np.array' or the path to the image as 'path=/path/to/image'")
 
-        coins = getCircles(image)
+        coins, gray, blured = getCircles(image)
         coinData = []
         for circle in coins[0]:
-            coords = getCoinCoord(circle)
+            coords = getCoinCoord(circle, xMaxImage=image.shape[1], yMaxImage=image.shape[0])
             color = getColor(image, coords=coords)
-            #radius = circle[2]
-            coinData.append((len(coords),color))
-        probability = nan # currently not calculated
+            coinData.append((len(coords), color))
+        probability = nan  # currently not calculated
         # argument is list of tuples (regionSize, mean hsv color)
-        return predictAll(coinData), probability
+        return predictAll(coinData), [gray,blured, drawCircles(coins, image)],probability
 
 
 if __name__ == '__main__':
-    amount = HoughTransformCounter.run(path='../reference/1Cent0.png')
+    amount = HoughTransformCounter.run(path='../testimages/test12.png')
     print(amount)
