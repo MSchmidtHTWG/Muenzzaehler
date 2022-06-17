@@ -64,7 +64,7 @@ class HoughTransformCounter:
                 if color[0] != 0:
                     colors.append(color[0])
                 # print(color)
-            return np.median(colors)
+            return np.mean(colors)
 
         def predictAll(all:[])->str:
             '''add the prediction -> match color and radius to a coin'''
@@ -84,8 +84,8 @@ class HoughTransformCounter:
         for circle in coins[0]:
             coords = getCoinCoord(circle)
             color = getColor(image, coords=coords)
-            radius = circle[2]
-            coinData.append((color, radius))
+            #radius = circle[2]
+            coinData.append((len(coords),color))
         probability = nan # currently not calculated
         # argument is list of tuples (regionSize, mean hsv color)
         return predictAll(coinData), probability

@@ -32,7 +32,7 @@ if __name__ == '__main__':
     layout = [
         [sg.Image(key="-CAM-", size=(160,120))],
         [sg.Text("Coins counted: --", key='-Count-')],
-        [sg.Button("Process"), sg.Button("Coin count"), sg.Button("Test")],
+        [sg.Button("Process"), sg.Button("Test")],
         [sg.Image(key="-IMAGE-",size=(160,120)), sg.Image(key="-Binary-",size=(160,120))],
         [sg.Image(key="-Label-",size=(160,120)), sg.Image(key="-GroupImage-",size=(160,120))]
     ]
@@ -50,10 +50,10 @@ if __name__ == '__main__':
         event, values = window.read(timeout=10)
         # End program if user closes window
         if event == "Process":
-            window['-IMAGE-'].update(filename=None, size=dim)
-            window['-Binary-'].update(filename=None, size=dim)
-            window['-Label-'].update(filename=None, size=dim)
-            window['-GroupImage-'].update(filename=None, size=dim)
+            window['-IMAGE-'].update(filename='',size=dim)
+            window['-Binary-'].update(filename='',size=dim)
+            window['-Label-'].update(filename='',size=dim)
+            window['-GroupImage-'].update(filename='',size=dim)
             window['-Count-'].update("Coins counted: --")
             window.refresh()
             ret, frame = cap.read()
@@ -71,8 +71,7 @@ if __name__ == '__main__':
             labelImage = cv2.resize(labelImage, dim, interpolation = cv2.INTER_AREA)
             io.imsave(f'../tmp/labelimage.png',labelImage)
             window['-Label-'].update(filename=f'../tmp/labelimage.png')
-            window.Refresh()             
-        elif event == "Coin count":
+            window.Refresh()
             predict, groupImage = ci.predict(regions, np.shape(image))
             countedCoins = ci.count(predict)
             groupImage = np.array(groupImage, dtype='uint8')
@@ -80,11 +79,12 @@ if __name__ == '__main__':
             io.imsave(f'../tmp/groupimage.png',groupImage)
             window['-Count-'].update("Coins counted: " + countedCoins)
             window['-GroupImage-'].update(filename=f'../tmp/groupimage.png')
+            window.refresh             
         elif event == "Test":
-            window['-IMAGE-'].update(filename=None, size=dim)
-            window['-Binary-'].update(filename=None, size=dim)
-            window['-Label-'].update(filename=None, size=dim)
-            window['-GroupImage-'].update(filename=None, size=dim)
+            window['-IMAGE-'].update(filename='', size=dim)
+            window['-Binary-'].update(filename='', size=dim)
+            window['-Label-'].update(filename='', size=dim)
+            window['-GroupImage-'].update(filename='', size=dim)
             window['-Count-'].update("Coins counted: --")
             window.refresh()
             filename = f'../testimages/test12.png'
@@ -101,7 +101,15 @@ if __name__ == '__main__':
             labelImage = cv2.resize(labelImage, dim, interpolation = cv2.INTER_AREA)
             io.imsave(f'../tmp/labelimage.png',labelImage)
             window['-Label-'].update(filename=f'../tmp/labelimage.png')
-            window.Refresh()      
+            window.Refresh()
+            predict, groupImage = ci.predict(regions, np.shape(image))
+            countedCoins = ci.count(predict)
+            groupImage = np.array(groupImage, dtype='uint8')
+            groupImage = cv2.resize(groupImage, dim, interpolation = cv2.INTER_AREA)
+            io.imsave(f'../tmp/groupimage.png',groupImage)
+            window['-Count-'].update("Coins counted: " + countedCoins)
+            window['-GroupImage-'].update(filename=f'../tmp/groupimage.png')
+            window.refresh           
         elif event == sg.WIN_CLOSED:
             break
         else:

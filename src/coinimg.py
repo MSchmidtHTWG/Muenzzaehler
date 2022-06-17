@@ -18,8 +18,11 @@ def predict_hough(coins: [(int, float)]) -> str:
     return count(predict(coins))
 
 
-def predict(regions, shape=None):
-    coins = loadDict()
+def predict(regions, shape=None, hough=False):
+    if hough:
+        coins = loadDict(hough=True)
+    else:
+        coins = loadDict()
     if not shape is None:
         groupImage = np.full(shape, 255)
     predictions = []
@@ -62,35 +65,35 @@ def predict(regions, shape=None):
             # print(closest_size_candidate)
             predictions.append(closest_size_candidate)
         if not shape is None:
-            if predictions[len(predictions) - 1] == '2Euro':
+            if predictions[len(predictions)-1] == '2Euro':
                 r = 102
                 g = 204
                 b = 255
-            elif predictions[len(predictions) - 1] == '1Euro':
+            elif predictions[len(predictions)-1] == '1Euro':
                 r = 0
                 g = 153
                 b = 230
-            elif predictions[len(predictions) - 1] == '50Cent':
+            elif predictions[len(predictions)-1] == '50Cent':
                 r = 255
                 g = 230
                 b = 128
-            elif predictions[len(predictions) - 1] == '20Cent':
+            elif predictions[len(predictions)-1] == '20Cent':
                 r = 255
                 g = 209
                 b = 26
-            elif predictions[len(predictions) - 1] == '10Cent':
+            elif predictions[len(predictions)-1] == '10Cent':
                 r = 204
                 g = 163
                 b = 0
-            elif predictions[len(predictions) - 1] == '5Cent':
+            elif predictions[len(predictions)-1] == '5Cent':
                 r = 255
                 g = 133
                 b = 102
-            elif predictions[len(predictions) - 1] == '2Cent':
+            elif predictions[len(predictions)-1] == '2Cent':
                 r = 255
                 g = 71
                 b = 26
-            elif predictions[len(predictions) - 1] == '1Cent':
+            elif predictions[len(predictions)-1] == '1Cent':
                 r = 204
                 g = 41
                 b = 0
@@ -102,7 +105,6 @@ def predict(regions, shape=None):
     if not shape is None:
         return predictions, groupImage
     return predictions
-
 
 def count(predictions):
     result = 0
@@ -118,8 +120,7 @@ def count(predictions):
     }
     for prediction in predictions:
         result += coin.get(prediction)
-    return str(result / 100) + '€'
-
+    return str(result/100) + '€'
 
 def coindict():
     dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -150,9 +151,8 @@ def coindict():
                 min_region_size = region[0][0]
             region_colors.append(region[0][1])
         color = np.mean(region_colors)
-        cd.update({name: (min_region_size, max_region_size, color)})
+        cd.update({name : (min_region_size, max_region_size, color)})
     return cd
-
 
 def loadDict(hough=False):
     if hough:
@@ -163,7 +163,6 @@ def loadDict(hough=False):
         cd = pickle.load(f)
     return cd
 
-
 def saveDict(hough=False):
     if hough:
         with open('coin_dictionary_hough.pkl', 'wb') as f:
@@ -171,7 +170,6 @@ def saveDict(hough=False):
     dictionary = coindict()
     with open('coin_dictionary.pkl', 'wb') as f:
         pickle.dump(dictionary, f)
-
 
 '''
 Computes region sizes and region colors from a 24bit rgb image. 
@@ -183,20 +181,18 @@ is discarded as well.
 @return: returns a list of tuples for each region. Each tuple contains a regions size and its color.
          If return_steps=True, returns the list of tuples and three intermediary images from the processing steps.
 '''
-
-
 def regions(image, minRegionSize=0, threshold=0, return_steps=False):
     binaryImage = rgbToBinary(image, threshold)
     labeledImage = sequentialLabeling(binaryImage)
     hsvImage = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
 
     regions = list()
-
+    
     # for every region (label), compute its size and color
     labels, counts = np.unique(labeledImage, return_counts=True)
-    for i in range(0, len(labels) - 1):
+    for i in range(0,len(labels)-1):
         if counts[i] < minRegionSize:
-            labeledImage[labeledImage == labels[i]] = labels[len(labels) - 1]
+            labeledImage[labeledImage == labels[i]] = labels[len(labels)-1]
             continue
         indizes = np.where(labeledImage == labels[i])
         colors = []
@@ -204,7 +200,7 @@ def regions(image, minRegionSize=0, threshold=0, return_steps=False):
             colors.append(hsvImage[indizes[0][j]][indizes[1][j]][0])
         color = np.mean(colors)
         regions.append((counts[i], color, indizes))
-
+        
     if return_steps:
         return regions, binaryImage, discreteContrast(labeledImage)
     return regions
@@ -229,7 +225,7 @@ def discreteContrast(filteredImage):
     valueList = np.unique(img)
     valueDict = dict()
     for i in range(0, len(valueList)):
-        valueDict.update({valueList[i]: i})
+        valueDict.update({valueList[i] : i})
     for v in range(shape[0]):
         for u in range(shape[1]):
             img[v][u] = valueDict.get(filteredImage[v][u])
@@ -238,11 +234,11 @@ def discreteContrast(filteredImage):
 
 def labeledNeighbors(image, x, y, n=8):
     nbrs = list()
-    if x - 1 >= 0 and image[y][x - 1] > 1:
-        nbrs.append((x - 1, y))
+    if x - 1 >= 0 and image[y][x-1] > 1:
+        nbrs.append((x-1, y))
     if n == 4:
-        if y - 1 >= 0 and image[y - 1][x] > 1:
-            nbrs.append((x, y - 1))
+        if y - 1 >= 0 and image[y-1][x] > 1:
+            nbrs.append((x, y-1))
         return nbrs
     r = -1
     v = 2
@@ -252,8 +248,8 @@ def labeledNeighbors(image, x, y, n=8):
         v = 1
     if y - 1 >= 0:
         for i in range(r, v):
-            if image[y - 1][x + i] > 1:
-                nbrs.append((x + i, y - 1))
+            if image[y-1][x+i] > 1:
+                nbrs.append((x+i, y-1))
     return nbrs
 
 
