@@ -3,6 +3,7 @@ from coinimg import predict_hough
 from skimage import io
 import numpy as np
 import cv2 as cv
+import os
 
 
 class HoughTransformCounter:
@@ -95,5 +96,7 @@ class HoughTransformCounter:
 
 
 if __name__ == '__main__':
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    os.chdir(dir_path)
     amount = HoughTransformCounter.run(path='../testimages/test12.png')
     print(amount)
