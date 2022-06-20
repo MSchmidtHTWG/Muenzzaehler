@@ -15,37 +15,23 @@ import warnings
 from houghtransform import HoughTransformCounter
 warnings.filterwarnings("ignore")
 
-def existing_images():
-    extensions = ['.png']
-    imagesList = []
-    for r,d,files in (os.walk("../")):
-        for file in files:
-            if file.endswith(extensions[0]):
-                imagesList.append(io.imread(os.path.join(r,file)))
-
-
-    for image in imagesList:
-        print(f"Es wurden {process(image)} Cent gezählt")
-
 if __name__ == '__main__':
+    # thumbnail dimensions
     dim = (160, 120)
     dir_path = os.path.dirname(os.path.realpath(__file__))
     os.chdir(dir_path)
     # GUI layout
     layout = [
-        [sg.Image(key="-CAM-", size=(160,120))],
-        [sg.Text("Region filter prediction: --", key='-Count-'), sg.Text("Houghtransform prediction: --", key='-HCount-')],
-        [sg.Button("Capture"),sg.Button("Process"), sg.Button("Test"),sg.Button("Houghtransformation")],
-        [sg.Image(key="-IMAGE-",size=(160,120))],
-        [sg.Image(key="-Binary-",size=(160,120)), sg.Image(key="-GRAY-", size=dim)],
-        [sg.Image(key="-Label-",size=(160,120)), sg.Image(key="-BLUR-", size=dim)],
-        [sg.Image(key="-GroupImage-",size=(160,120)), sg.Image(key="-CIRCLES-", size=dim)],
+        [sg.Image(key="-CAM-", size=dim)],
+        [sg.Text("Region filter prediction: --",key='-Count-', font=('Helvetica', 25))],
+        [sg.Text("Houghtransform prediction: --", key='-HCount-', font=('Helvetica', 25))],
+        [sg.Button("Capture"), sg.Button("Test"),sg.Button("Regionfilter"),sg.Button("Houghtransformation")],
+        [sg.Image(key="-IMAGE-",size=dim)],
+        [sg.Image(key="-Binary-",size=dim), sg.Image(key="-Label-",size=dim), sg.Image(key="-GroupImage-",size=dim)],
+        [sg.Image(key="-GRAY-", size=dim), sg.Image(key="-BLUR-", size=dim), sg.Image(key="-CIRCLES-", size=dim)],
     ]
-    
-    # Thumbnail dimensions
-    
-
     # Create the window
+    sg.theme('DarkTeal6')
     window = sg.Window("Coin Counter", layout, element_justification='c') # Alternative: layout ver grössern
     image = None
     regions = None
@@ -92,8 +78,8 @@ if __name__ == '__main__':
             window['-IMAGE-'].update(filename=f'../tmp/thumbnail.png')
             window.refresh()
             filename = '../testimages/test12.png'
-        elif event == "Process":
-            regions, binaryimage, labelImage = ci.regions(image, minRegionSize= 500, threshold=25, return_steps=True)
+        elif event == "Regionfilter":
+            regions, binaryimage, labelImage = ci.regions(image, minRegionSize= 1000, threshold=25, return_steps=True)
             binaryimage = cv2.resize(binaryimage, dim, interpolation = cv2.INTER_AREA)
             io.imsave(f'../tmp/binaryimage.png', binaryimage)
             window['-Binary-'].update(filename=f'../tmp/binaryimage.png')
