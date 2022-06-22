@@ -98,5 +98,7 @@ class HoughTransformCounter:
 if __name__ == '__main__':
     dir_path = os.path.dirname(os.path.realpath(__file__))
     os.chdir(dir_path)
-    amount = HoughTransformCounter.run(path='../testimages/test12.png')
-    print(amount)
+    processed = HoughTransformCounter.run(path='../testimages/test12.png')
+    for i in range(processed[1].__len__()):
+        io.imsave(f"../tmp/{i}.png", processed[1][i])
+    print(processed)
